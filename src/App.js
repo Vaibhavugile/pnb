@@ -11,11 +11,11 @@ function App() {
   return (
     <Router>
       <div>
-      <h1>Café Table Management</h1>
+      
         <Routes>
           <Route path="/add-product" element={<ProductForm />} />
           <Route path="/products" element={<ProductList />} />
-          <Route path="/" element={<TableList />} />
+          <Route path="/usersidebar/billing" element={<TableList />} />
           <Route path="/add-table" element={<TableForm />} />
           <Route path="/table/:tableId" element={<TableDetail />} />
           <Route path="/report/order" element={<OrdersReport />} />
