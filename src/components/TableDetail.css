@@ -108,3 +108,55 @@ button:hover {
 .add-all-btn:hover {
   background-color: #0056b3;
 }
+.product-menu {
+  display: flex;
+  flex-direction: column; /* Stacks the subcategory container vertically */
+}
+
+.subcategory-container {
+  display: flex; /* Aligns the subcategories horizontally */
+  flex-wrap: wrap; /* Allows wrapping to the next line if space is insufficient */
+  gap: 15px; /* Adds space between cards */
+}
+
+.subcategory-card {
+  border: 1px solid #ccc; /* Border around the card */
+  border-radius: 8px; /* Rounded corners */
+  padding: 10px; /* Padding inside the card */
+  background-color: #f9f9f9; /* Background color of the card */
+  width: 200px; /* Fixed width for each card */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Shadow for card effect */
+  transition: transform 0.2s; /* Transition effect on hover */
+}
+
+.subcategory-card:hover {
+  transform: scale(1.05); /* Slightly enlarge the card on hover */
+}
+
+.subcategory-button {
+  font-weight: bold; /* Make the subcategory name bold */
+  background: none; /* Remove default button styling */
+  border: none; /* Remove default button border */
+  color: #333; /* Text color */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+.subcategory-products {
+  margin-top: 5px; /* Adds space between the button and products */
+  padding: 5px; /* Adds padding for products */
+  background-color: #fff; /* White background for products */
+  border: 1px solid #ddd; /* Light border around products */
+  border-radius: 4px; /* Slightly rounded corners for products */
+}
+
+.product-item {
+  display: flex; /* Aligns product name and quantity controls horizontally */
+  justify-content: space-between; /* Space between product name and controls */
+  margin: 5px 0; /* Space between products */
+}
+
+.quantity-controls {
+  display: flex; /* Aligns quantity controls horizontally */
+  align-items: center; /* Center vertically */
+}
+

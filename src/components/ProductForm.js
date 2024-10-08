@@ -3,15 +3,15 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import UserSidebar from './UserSidebar'; // Import the UserSidebar component
 import UserHeader from './UserHeader';   // Import the UserHeader component
-             // Assuming you have some custom CSS for the form
 
 const ProductForm = () => {
   const [productName, setProductName] = useState('');
   const [price, setPrice] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar toggle state
+  const [subcategory, setSubcategory] = useState('');  // New state for subcategory
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen); // Toggle sidebar visibility
+    setSidebarOpen(!sidebarOpen);
   };
 
   const handleSubmit = async (e) => {
@@ -20,9 +20,11 @@ const ProductForm = () => {
       await addDoc(collection(db, "products"), {
         name: productName,
         price: price,
+        subcategory: subcategory  // Save the subcategory field
       });
       setProductName('');
       setPrice('');
+      setSubcategory('');
     } catch (error) {
       console.error("Error adding product: ", error);
     }
@@ -30,7 +32,6 @@ const ProductForm = () => {
 
   return (
     <div className={`product-form-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      {/* Include the sidebar and header */}
       <UserSidebar isOpen={sidebarOpen} onToggle={handleSidebarToggle} />
       <div className="product-form-content">
         <UserHeader onMenuClick={handleSidebarToggle} isSidebarOpen={sidebarOpen} />
@@ -49,6 +50,13 @@ const ProductForm = () => {
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             placeholder="Price"
+            required
+          />
+          <input
+            type="text"
+            value={subcategory}
+            onChange={(e) => setSubcategory(e.target.value)}
+            placeholder="Subcategory"
             required
           />
           <button type="submit">Add Product</button>

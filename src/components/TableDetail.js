@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc, updateDoc, arrayUnion, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import './TableDetail.css';
 
@@ -9,9 +9,11 @@ const TableDetail = () => {
   const [table, setTable] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [products, setProducts] = useState([]);
+  const [groupedProducts, setGroupedProducts] = useState({});
   const [productQuantities, setProductQuantities] = useState({});
-  const [editMode, setEditMode] = useState(false); // To toggle edit mode
-  const [orderChanges, setOrderChanges] = useState([]); // To track changes to the order list
+  const [editMode, setEditMode] = useState(false);
+  const [orderChanges, setOrderChanges] = useState([]);
+  const [expandedSubcategory, setExpandedSubcategory] = useState(null); // Track which subcategory is expanded
 
   // Fetch table details
   useEffect(() => {
@@ -20,13 +22,13 @@ const TableDetail = () => {
       const tableDoc = await getDoc(tableRef);
       if (tableDoc.exists()) {
         setTable({ id: tableDoc.id, ...tableDoc.data() });
-        setOrderChanges(tableDoc.data().orders || []); // Initialize order changes with existing orders
+        setOrderChanges(tableDoc.data().orders || []);
       }
     };
     fetchTable();
   }, [tableId]);
 
-  // Fetch available products from Firestore
+  // Fetch available products and group by subcategory
   useEffect(() => {
     const fetchProducts = async () => {
       const productsCollection = collection(db, 'products');
@@ -37,6 +39,17 @@ const TableDetail = () => {
       }));
       setProducts(productList);
 
+      // Group products by subcategory
+      const grouped = productList.reduce((acc, product) => {
+        if (!acc[product.subcategory]) {
+          acc[product.subcategory] = [];
+        }
+        acc[product.subcategory].push(product);
+        return acc;
+      }, {});
+      setGroupedProducts(grouped);
+
+      // Initialize product quantities
       const initialQuantities = productList.reduce((acc, product) => {
         acc[product.id] = 0;
         return acc;
@@ -57,23 +70,20 @@ const TableDetail = () => {
   // Handle adding all selected products to the table's order
   const handleAddAllProducts = async () => {
     const selectedProducts = products.filter(product => productQuantities[product.id] > 0);
-    
+
     if (selectedProducts.length === 0) {
       alert('No products selected.');
       return;
     }
-  
-    // Create a copy of the current orders
+
     const updatedOrders = [...orderChanges];
-  
+
     selectedProducts.forEach(product => {
       const existingOrderIndex = updatedOrders.findIndex(order => order.name === product.name);
-      
+
       if (existingOrderIndex !== -1) {
-        // If the product already exists in the orders, update the quantity
         updatedOrders[existingOrderIndex].quantity += productQuantities[product.id];
       } else {
-        // If the product doesn't exist in the orders, add a new order
         updatedOrders.push({
           name: product.name,
           price: product.price,
@@ -81,7 +91,7 @@ const TableDetail = () => {
         });
       }
     });
-  
+
     const tableRef = doc(db, 'tables', tableId);
     try {
       await updateDoc(tableRef, {
@@ -91,13 +101,12 @@ const TableDetail = () => {
       const tableDoc = await getDoc(tableRef);
       if (tableDoc.exists()) {
         setTable({ id: tableDoc.id, ...tableDoc.data() });
-        setOrderChanges(updatedOrders); // Update the local state with the updated orders
+        setOrderChanges(updatedOrders);
       }
     } catch (error) {
       console.error('Error adding products: ', error);
     }
   };
-  
 
   // Toggle edit mode to modify the order
   const toggleEditMode = () => {
@@ -119,7 +128,7 @@ const TableDetail = () => {
         orders: orderChanges
       });
       alert('Orders updated successfully.');
-      setEditMode(false); // Exit edit mode after saving
+      setEditMode(false);
       const tableDoc = await getDoc(tableRef);
       if (tableDoc.exists()) {
         setTable({ id: tableDoc.id, ...tableDoc.data() });
@@ -127,6 +136,11 @@ const TableDetail = () => {
     } catch (error) {
       console.error('Error updating orders: ', error);
     }
+  };
+
+  // Toggle the visibility of products under a subcategory
+  const toggleSubcategory = (subcategory) => {
+    setExpandedSubcategory(expandedSubcategory === subcategory ? null : subcategory);
   };
 
   return (
@@ -149,26 +163,35 @@ const TableDetail = () => {
             ))}
           </ul>
 
-          {/* Button to toggle Edit Mode */}
           <button onClick={toggleEditMode}>
             {editMode ? 'Cancel Edit' : 'Edit Orders'}
           </button>
 
-          {/* If in edit mode, show save button */}
           {editMode && <button onClick={handleSaveChanges}>Save Changes</button>}
 
           <h3>Add Products to Table</h3>
           <button onClick={() => setShowMenu(!showMenu)}>
             {showMenu ? 'Hide Menu' : '+ Show Menu'}
           </button>
+          <button className="add-all-btn" onClick={handleAddAllProducts}>
+            Add to Table
+          </button>
 
           {showMenu && (
-            <div className="product-menu">
-              {products.map((product) => (
+  <div className="product-menu">
+
+    <div className="subcategory-container">
+    
+      {Object.keys(groupedProducts).map((subcategory) => (
+        <div key={subcategory} className="subcategory-card">
+          <button className="subcategory-button" onClick={() => toggleSubcategory(subcategory)}>
+            {subcategory}
+          </button>
+          {expandedSubcategory === subcategory && (
+            <div className="subcategory-products">
+              {groupedProducts[subcategory].map(product => (
                 <div key={product.id} className="product-item">
-                  <span>
-                    {product.name} - ${product.price}
-                  </span>
+                  <span>{product.name} - ₹{product.price}</span>
                   <div className="quantity-controls">
                     <button onClick={() => handleQuantityChange(product.id, -1)}>-</button>
                     <span>{productQuantities[product.id]}</span>
@@ -176,11 +199,16 @@ const TableDetail = () => {
                   </div>
                 </div>
               ))}
-              <button className="add-all-btn" onClick={handleAddAllProducts}>
-                Add to Table
-              </button>
             </div>
           )}
+        </div>
+      ))}
+    </div>
+
+    
+  </div>
+)}
+
         </div>
       ) : (
         <p>Loading table...</p>

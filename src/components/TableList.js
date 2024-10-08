@@ -125,7 +125,7 @@ const TableList = () => {
                   <button className="table-button">{table.tableNumber}</button>
                 </Link>
                 <button className="payment-button" onClick={() => handleOpenPaymentModal(table)}>
-                  Pay ${totalPrice.toFixed(2)}
+                  Pay {totalPrice.toFixed(2)}
                 </button>
               </div>
             );
@@ -139,13 +139,13 @@ const TableList = () => {
 
               {selectedTable.orders.length > 0 ? (
                 <>
-                  <p>Total Price: ${calculateTotalPrice(selectedTable.orders)}</p>
+                  <p>Total Price: ₹{calculateTotalPrice(selectedTable.orders)}</p>
 
                   <h4>Order Summary:</h4>
                   <ul>
                     {selectedTable.orders.map((order, index) => (
                       <li key={index}>
-                        {order.quantity} x {order.name} - ${order.price * order.quantity}
+                        {order.quantity} x {order.name} - ₹{order.price * order.quantity}
                       </li>
                     ))}
                   </ul>
