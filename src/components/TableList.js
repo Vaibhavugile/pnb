@@ -13,6 +13,7 @@ const TableList = () => {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
   const [responsibleName, setResponsibleName] = useState('');
+  const [discountPercentage, setDiscountPercentage] = useState(0); // New discount percentage state
   const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar toggle state
 
   const handleSidebarToggle = () => {
@@ -41,6 +42,10 @@ const TableList = () => {
     return orders.reduce((total, order) => total + (order.price * order.quantity), 0);
   };
 
+  const calculateDiscountedPrice = (totalPrice, discountPercentage) => {
+    const discountAmount = (totalPrice * discountPercentage) / 100;
+    return totalPrice - discountAmount;
+  };
   const handleOpenPaymentModal = (table) => {
     setSelectedTable(table);
     setShowPaymentModal(true);
@@ -52,6 +57,7 @@ const TableList = () => {
     setPaymentMethod('');
     setPaymentStatus('');
     setResponsibleName('');
+    setDiscountPercentage(0); // Reset discount percentage
   };
 
   const handleSavePayment = async () => {
@@ -61,10 +67,15 @@ const TableList = () => {
       let updatedOrders = selectedTable.orders;
       let previousOrders = selectedTable.orderHistory || [];
 
+      const totalPrice = calculateTotalPrice(selectedTable.orders);
+      const discountedPrice = calculateDiscountedPrice(totalPrice, discountPercentage);
+
       const newHistoryEntry = {
         orders: selectedTable.orders,
         payment: {
-          total: calculateTotalPrice(selectedTable.orders),
+          total: totalPrice,
+          discountedTotal: discountedPrice, // Save discounted total
+          discountPercentage, // Save discount percentage
           status: paymentStatus,
           method: paymentMethod,
           responsible: paymentStatus === 'Due' ? responsibleName : null,
@@ -88,7 +99,9 @@ const TableList = () => {
       try {
         await updateDoc(tableRef, {
           payment: {
-            total: calculateTotalPrice(selectedTable.orders),
+            total: totalPrice,
+            discountedTotal: discountedPrice,
+            discountPercentage,
             status: paymentStatus,
             method: paymentMethod,
             responsible: paymentStatus === 'Due' ? responsibleName : null
@@ -149,6 +162,17 @@ const TableList = () => {
                       </li>
                     ))}
                   </ul>
+                  <label>
+                    Discount Percentage:
+                    <input
+                      type="number"
+                      value={discountPercentage}
+                      onChange={(e) => setDiscountPercentage(e.target.value)}
+                      placeholder="Enter discount percentage"
+                    />
+                  </label>
+
+                  <p>Discounted Price: ₹{calculateDiscountedPrice(calculateTotalPrice(selectedTable.orders), discountPercentage).toFixed(2)}</p>
 
                   <label>
                     Payment Status:

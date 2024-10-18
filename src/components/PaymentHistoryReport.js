@@ -25,7 +25,9 @@ const PaymentHistoryReport = () => {
               historyData.push({
                 tableNumber: table.tableNumber,
                 ...order.payment, // Extract payment details
-                orders: order.orders, // Keep order details if needed
+                orders: order.orders,
+                discountedTotal: order.payment.discountedTotal || order.payment.total,
+                 // Keep order details if needed
                 timestamp: order.payment.timestamp
               });
             });
@@ -69,12 +71,13 @@ const PaymentHistoryReport = () => {
     const totals = { Cash: 0, Card: 0, UPI: 0 };
 
     data.forEach((entry) => {
+      const total = entry.discountedTotal || entry.total;
       if (entry.method === 'Cash') {
-        totals.Cash += entry.total;
+        totals.Cash += total;
       } else if (entry.method === 'Card') {
-        totals.Card += entry.total;
+        totals.Card += total;
       } else if (entry.method === 'UPI') {
-        totals.UPI += entry.total;
+        totals.UPI += total;
       }
     });
 
@@ -115,6 +118,7 @@ const PaymentHistoryReport = () => {
                 <tr>
                   <th>Table Number</th>
                   <th>Total Amount</th>
+                  <th>Discounted Total</th>
                   <th>Payment Method</th>
                   <th>Payment Status</th>
                   <th>Responsible</th>
@@ -131,6 +135,7 @@ const PaymentHistoryReport = () => {
                     >
                       ${typeof entry.total === 'number' ? entry.total.toFixed(2) : parseFloat(entry.total).toFixed(2)}
                     </td>
+                    <td>${entry.discountedTotal ? entry.discountedTotal.toFixed(2) : 'N/A'}</td> {/* Display Discounted Total */}
                     <td>{entry.method || 'N/A'}</td>
                     <td>{entry.status || 'N/A'}</td>
                     <td>{entry.responsible || 'N/A'}</td>
