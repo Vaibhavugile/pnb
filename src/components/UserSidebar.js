@@ -13,8 +13,8 @@ const UserSidebar = ({isOpen}) => {
           <li className="sidebar-greeting1">Welcome User,</li>
           <li className="sidebar-greeting">Leads</li>
 
-          <li className={`sidebar-link ${location.pathname === '/' ? 'active' : ''}`}>
-            <Link to="/" >
+          <li className={`sidebar-link ${location.pathname === '/usersidebar/billing' ? 'active' : ''}`}>
+            <Link to="/usersidebar/billing" >
                Billing </Link>
           </li>
 
