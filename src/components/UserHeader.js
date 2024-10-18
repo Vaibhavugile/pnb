@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import logo1 from '../assets/screenshot-20240801-at-125204-pmremovebgpreview-1@2x.png';
+import logo1 from '../assets/arlogo.jpg';
 import profileIcon from '../assets/Profile.png';
 import menuImage from '../assets/Menu.png';
 import './UserHeader.css';

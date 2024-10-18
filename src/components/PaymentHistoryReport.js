@@ -9,6 +9,8 @@ const PaymentHistoryReport = () => {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [selectedOrders, setSelectedOrders] = useState(null); // For storing selected orders
   const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar toggle state
+  const [filterDate, setFilterDate] = useState(''); // For storing the selected filter date
+  const [filteredData, setFilteredData] = useState([]); // Filtered payment data for the selected date
 
   useEffect(() => {
     const fetchPaymentHistory = async () => {
@@ -23,7 +25,8 @@ const PaymentHistoryReport = () => {
               historyData.push({
                 tableNumber: table.tableNumber,
                 ...order.payment, // Extract payment details
-                orders: order.orders // Keep order details if needed
+                orders: order.orders, // Keep order details if needed
+                timestamp: order.payment.timestamp
               });
             });
           }
@@ -38,6 +41,22 @@ const PaymentHistoryReport = () => {
     fetchPaymentHistory();
   }, []);
 
+  // Filter payment history by selected date
+  useEffect(() => {
+    if (filterDate) {
+      const filtered = paymentHistory.filter((entry) => {
+        const paymentDate = new Date(entry.timestamp).toISOString().split('T')[0];
+        return paymentDate === filterDate; // Match payment entries with the selected date
+      });
+      setFilteredData(filtered);
+    } else {
+      setFilteredData(paymentHistory); // Show all data if no filter is selected
+    }
+  }, [filterDate, paymentHistory]);
+
+  // Sort filtered data by timestamp (latest first)
+  const sortedFilteredData = filteredData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
   const handleTotalClick = (orders) => {
     setSelectedOrders(orders);
   };
@@ -46,6 +65,24 @@ const PaymentHistoryReport = () => {
     setSidebarOpen(!sidebarOpen); // Toggle sidebar visibility
   };
 
+  const calculateTotals = (data) => {
+    const totals = { Cash: 0, Card: 0, UPI: 0 };
+
+    data.forEach((entry) => {
+      if (entry.method === 'Cash') {
+        totals.Cash += entry.total;
+      } else if (entry.method === 'Card') {
+        totals.Card += entry.total;
+      } else if (entry.method === 'UPI') {
+        totals.UPI += entry.total;
+      }
+    });
+
+    return totals;
+  };
+
+  const totals = calculateTotals(sortedFilteredData);
+
   return (
     <div className={`report-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
       <UserSidebar isOpen={sidebarOpen} onToggle={handleSidebarToggle} />
@@ -53,7 +90,25 @@ const PaymentHistoryReport = () => {
         <UserHeader onMenuClick={handleSidebarToggle} isSidebarOpen={sidebarOpen} />
 
         <h2>Payment History Report</h2>
-        {paymentHistory.length > 0 ? (
+
+        <div className="filter-section">
+          <label htmlFor="dateFilter">Filter by Date:</label>
+          <input
+            type="date"
+            id="dateFilter"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+        </div>
+
+        <div className="totals-summary">
+          <h3>Daily Totals for {filterDate || 'All Dates'}:</h3>
+          <p>Cash Total: ${totals.Cash.toFixed(2)}</p>
+          <p>Card Total: ${totals.Card.toFixed(2)}</p>
+          <p>UPI Total: ${totals.UPI.toFixed(2)}</p>
+        </div>
+
+        {sortedFilteredData.length > 0 ? (
           <>
             <table>
               <thead>
@@ -67,7 +122,7 @@ const PaymentHistoryReport = () => {
                 </tr>
               </thead>
               <tbody>
-                {paymentHistory.map((entry, index) => (
+                {sortedFilteredData.map((entry, index) => (
                   <tr key={index}>
                     <td>{entry.tableNumber}</td>
                     <td
@@ -100,7 +155,7 @@ const PaymentHistoryReport = () => {
             )}
           </>
         ) : (
-          <p>No payment history available.</p>
+          <p>No payment history available for the selected date.</p>
         )}
       </div>
     </div>

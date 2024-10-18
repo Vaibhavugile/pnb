@@ -116,7 +116,13 @@ const TableDetail = () => {
   // Handle changes to the order during editing
   const handleOrderChange = (index, quantityChange) => {
     const updatedOrders = [...orderChanges];
-    updatedOrders[index].quantity = Math.max(1, updatedOrders[index].quantity + quantityChange);
+    updatedOrders[index].quantity += quantityChange;
+  
+    if (updatedOrders[index].quantity <= 0) {
+      // Remove the product if quantity becomes zero or less
+      updatedOrders.splice(index, 1);
+    }
+  
     setOrderChanges(updatedOrders);
   };
 
